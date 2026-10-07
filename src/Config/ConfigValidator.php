@@ -105,14 +105,71 @@ final class ConfigValidator
         $path = $section['path'] ?? null;
 
         if (!is_string($path) || trim($path) === '') {
-            $errors[] = 'wordpress.path: required - installation directory, e.g. "." for the project root or "./wordpress".';
-            $path     = '.';
+            $errors[] = 'wordpress.path: required - installation directory, e.g. "project" (created as a sibling of '
+                . 'the bootstrapper repository) or an absolute path such as "/srv/wordpress".';
+            $path     = 'project';
+        }
+
+        $resolved = Filesystem::resolve($path, $this->installBase());
+
+        if ($this->isInsideRepository($resolved)) {
+            $errors[] = sprintf(
+                'wordpress.path: "%s" resolves to "%s", which is inside the bootstrapper repository (%s) - the '
+                . 'repository holds the tool, never the site. Use a sibling directory instead, e.g. "project" -> "%s".',
+                $this->printable($path),
+                $resolved,
+                $this->projectRoot,
+                $this->installBase() . DIRECTORY_SEPARATOR . 'project'
+            );
         }
 
         return [
             'version' => $version,
-            'path'    => Filesystem::resolve($path, $this->projectRoot),
+            'path'    => $resolved,
         ];
+    }
+
+    /**
+     * Base directory for WordPress installations.
+     *
+     * The bootstrapper repository is the tool directory, so a *relative*
+     * `wordpress.path` is resolved against its parent - projects are created
+     * as siblings of the repository:
+     *
+     *   /var/www/html/wp-environment-bootstrapper/  +  "project"
+     *     -> /var/www/html/project                  (never .../wp-environment-bootstrapper/project)
+     *
+     * Absolute paths never reach this base (see Filesystem::resolve()).
+     */
+    private function installBase(): string
+    {
+        return Filesystem::parentOf($this->projectRoot);
+    }
+
+    /**
+     * Whether an already-resolved path is the repository itself or lives inside
+     * it. A WordPress installation must never land there: it would mix core
+     * files with the tool's sources and get committed or deleted by mistake.
+     */
+    private function isInsideRepository(string $path): bool
+    {
+        $root   = Filesystem::normalize($this->projectRoot);
+        $target = Filesystem::normalize($path);
+
+        // Windows paths compare case-insensitively.
+        if (DIRECTORY_SEPARATOR === '\\') {
+            $root   = strtolower($root);
+            $target = strtolower($target);
+        }
+
+        $root = $root === DIRECTORY_SEPARATOR ? $root : rtrim($root, DIRECTORY_SEPARATOR);
+
+        if ($root === '') {
+            // The repository sits at the filesystem root: everything is inside it.
+            return true;
+        }
+
+        return $target === $root || strpos($target, $root . DIRECTORY_SEPARATOR) === 0;
     }
 
     /**

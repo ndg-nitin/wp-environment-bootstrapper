@@ -45,6 +45,14 @@ First stable release of the WordPress Environment Bootstrapper.
 - Documentation: `README.md` (26 sections), `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE` (MIT),
   `.editorconfig`, `.gitignore`, `.gitattributes` (LF in the repository, CRLF for `*.cmd`).
 
+### Changed
+
+- Relative `wordpress.path` values are resolved against the directory that **contains** the
+  bootstrapper repository, so projects are created as sibling directories and never inside the tool
+  (`/var/www/html/wp-environment-bootstrapper` + `project` -> `/var/www/html/project`). Absolute
+  paths are used exactly as configured, and a path that resolves inside the repository is rejected
+  during validation. `config/setup.example.json` now ships `"path": "project"` accordingly.
+
 ### Security
 
 - Secrets (database password, `acf_pro_key`, any secret value of 6+ characters) are redacted from

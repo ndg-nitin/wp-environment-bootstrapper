@@ -9,13 +9,22 @@ use WpEnvironment\Core\SetupException;
 /**
  * Cross-platform path helpers.
  *
- * All project-relative files are resolved from the project root (derived from
- * this class' own location), never from the caller's working directory.
+ * Two different bases are used on purpose:
+ *
+ *   - Project files (configuration, secrets, local plugin/theme archives) are
+ *     resolved from the *project root* - the bootstrapper repository itself,
+ *     derived from this class' own location, never from the caller's working
+ *     directory.
+ *   - WordPress installations are resolved from the directory that *contains*
+ *     the repository (see parentOf()): projects are siblings of the tool, so
+ *     they can never end up inside the repository.
  */
 final class Filesystem
 {
     /**
      * Absolute path of the project root (the directory containing setup.php).
+     *
+     * This is the tool/repository directory - not a WordPress install target.
      */
     public static function projectRoot(): string
     {
@@ -106,6 +115,20 @@ final class Filesystem
         }
 
         return $normalized === '' ? '.' : $normalized;
+    }
+
+    /**
+     * Parent directory of a directory, using the same normalisation rules as
+     * resolve(): separators, "." , ".." and trailing slashes are collapsed
+     * first, so "/a/b/", "/a/b" and Windows-style input all give the same
+     * answer on Linux and Windows.
+     *
+     * This is the base directory for WordPress installations: the repository
+     * is the tool directory, its parent is where projects live.
+     */
+    public static function parentOf(string $directory): string
+    {
+        return dirname(self::normalize($directory));
     }
 
     /**

@@ -1,7 +1,7 @@
 {
   "wordpress": {
     "version": "6.8.2",
-    "path": "./wordpress"
+    "path": "project"
   },
 
   "database": {
@@ -13,7 +13,7 @@
   },
 
   "site": {
-    "url": "http://localhost/wordpress",
+    "url": "http://localhost/project",
     "title": "My WordPress Site"
   },
 

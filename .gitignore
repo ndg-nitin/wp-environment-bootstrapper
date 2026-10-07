@@ -9,7 +9,8 @@
 /setup.json
 /env.json
 
-# Local WordPress installation created by this tool (default example path)
+# Safety net: WordPress projects are created NEXT to this repository (e.g. ../project),
+# never inside it - but never commit a stray installation by accident.
 /wordpress/
 /wp-config.php
 

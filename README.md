@@ -98,8 +98,8 @@ bin/wp-env --dry-run
 bin/wp-env
 
 # 3. Open the site.
-#    Site:  http://localhost/wordpress
-#    Admin: http://localhost/wordpress/wp-admin
+#    Site:  http://localhost/project
+#    Admin: http://localhost/project/wp-admin
 ```
 
 `bin/wp-env` is a thin wrapper around `wp --require=setup.php setup`; on Windows use
@@ -120,7 +120,8 @@ warning (they are usually typos) and are ignored.
 {
   "wordpress": {
     "version": "6.8.2",          // required: exact WordPress version to download
-    "path": "./wordpress"        // required: install directory, relative to the project root ("." = project root)
+    "path": "project"            // required: install directory; relative paths are created NEXT TO the
+                                 // bootstrapper repository, absolute paths are used exactly as given
   },
 
   "database": {
@@ -132,7 +133,7 @@ warning (they are usually typos) and are ignored.
   },
 
   "site": {
-    "url": "http://localhost/wordpress", // required: http(s) URL, no trailing slash needed
+    "url": "http://localhost/project", // required: http(s) URL, no trailing slash needed
     "title": "My WordPress Site"         // required
   },
 
@@ -162,6 +163,23 @@ warning (they are usually typos) and are ignored.
 
 Plugin entry keys: `name` (required slug), `version` (optional pin), `source` (optional URL or local ZIP -
 when set, the plugin is fetched from there instead of WordPress.org), `activate` (default `true`).
+
+**Where `wordpress.path` points.** The bootstrapper repository is the *tool* directory. A relative path
+is resolved against the directory that **contains** the repository, so a WordPress project is always a
+**sibling** of the tool - never a subfolder of it:
+
+| `wordpress.path` | Repository at `/var/www/html/wp-environment-bootstrapper/` | Resolved install directory |
+|---|---|---|
+| `project` | | `/var/www/html/project` |
+| `clients/project` | | `/var/www/html/clients/project` |
+| `./wordpress` | | `/var/www/html/wordpress` |
+| `.` | | `/var/www/html` (the sibling directory itself) |
+| `/srv/wordpress` (absolute) | | `/srv/wordpress` (used exactly as configured) |
+
+Nothing is hard-coded: the base is always `dirname(<bootstrapper repository>)`, computed from the
+tool's own location, so it works the same from any working directory and on Windows. A path that
+resolves **inside** the repository is rejected during validation, which keeps core files from ever
+being mixed with the tool's sources (see the error text in section 24).
 
 Resolution order: `--config=<path>` → `config/setup.json` → `./setup.json` (legacy, warns).
 
@@ -322,6 +340,9 @@ The original project files keep working without edits:
 Mapping examples: `dbname` → `database.name`, `dbpass` → `database.password`, `admin_name` →
 `admin.username`, `axioned_theme` → `theme.source`, `pluginListInstall[].status` → `activate`.
 
+A legacy `path` follows exactly the same rule as a new one: relative values are resolved next to the
+repository (a sibling directory), absolute values are used as configured.
+
 If both `config/setup.json` and `./setup.json` exist, the new location wins and a warning tells you.
 Migration is a copy-paste: start from `config/setup.example.json` and compare.
 
@@ -419,9 +440,10 @@ Report vulnerabilities per `SECURITY.md`.
 
 ## 19. Cross-platform notes
 
-- All paths are built with PHP filesystem APIs (`Filesystem::resolve/normalize`) and probed with
-  `Filesystem::isWritableAt` - no hardcoded `/`, no assumptions about the working directory; Windows
-  drive letters and UNC paths are recognised.
+- All paths are built with PHP filesystem APIs (`Filesystem::resolve/normalize/parentOf`) and probed
+  with `Filesystem::isWritableAt` - no hardcoded `/`, no assumptions about the working directory;
+  Windows drive letters and UNC paths are recognised. The base for a relative `wordpress.path` is the
+  parent of the bootstrapper repository (section 6), computed from the tool's own location.
 - Commands are passed as argument arrays, so spaces in paths (e.g. `WP ENV - Bootstraper`) are safe.
 - `bin/wp-env` is a POSIX script; `bin/wp-env.cmd` covers Windows, and `wp --require=setup.php setup`
   works everywhere unchanged.
@@ -463,6 +485,9 @@ The suite is dependency-free (a small hand-written runner, no PHPUnit) and cover
 - dry-run really executes nothing, while read-only probes still run,
 - environment checks: the four labelled checks are always reported, every failing check carries
   hints, an unwritable install path is fatal, and the database password never leaks into a result,
+- installation path resolution: a relative `wordpress.path` resolves **next to** the bootstrapper
+  repository (`project` -> `../project`), absolute paths are used as configured, and a path that
+  resolves inside the repository is rejected,
 - option handling of the command itself, including the `--skip-plugins` read-back from the WP-CLI
   runner configuration,
 - a live `wp --info` child process round-trip (skipped automatically when WP-CLI is absent),
@@ -509,6 +534,7 @@ facing errors must carry hints, and secrets must go through `CommandRunner::addS
 | Symptom | Likely cause and fix |
 |---|---|
 | `No configuration file found` | Run `cp config/setup.example.json config/setup.json`, or pass `--config=`. |
+| `wordpress.path ... resolves to ... inside the bootstrapper repository` | The repository holds the tool, not the site: use a sibling name such as `project` (or an absolute path outside the repository). Section 6 shows the resolution table. |
 | `Configuration is invalid (N error(s))` | Every line under the message names a key and the expected form; fix them all at once. |
 | `acf-pro requires your ACF Pro license key` | Put your key in `secrets/env.json` → `acf_pro_key` (section 13). |
 | `Database ... connection failed` | Check `database.host/user/password` and that MySQL is running; the hints include the classified error (access denied, unknown host, ...). |
