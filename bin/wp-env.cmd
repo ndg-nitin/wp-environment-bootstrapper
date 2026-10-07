@@ -5,3 +5,4 @@ rem Usage: bin\wp-env.cmd --dry-run
 setlocal
 set "ROOT=%~dp0.."
 wp --require="%ROOT%\setup.php" setup %*
+exit /b %ERRORLEVEL%

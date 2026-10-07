@@ -30,6 +30,7 @@ $required = [
     'LICENSE',
     '.editorconfig',
     '.gitignore',
+    '.gitattributes',
     'bin/wp-env',
     'config/setup.example.json',
     'config/plugins.json',
@@ -53,6 +54,15 @@ $readme = $read('README.md');
 $headings = preg_grep('/^## /', explode("\n", $readme)) ?: [];
 
 $t->assertSame(26, count($headings), 'README.md has the 26 documented sections');
+
+// Repository URL must be real - no <placeholder> left in the documentation.
+$t->assertNotContains('<your-fork-url>', $readme, 'README clone URL is filled in');
+$t->assertNotContains('<your-fork-url>', $read('CONTRIBUTING.md'), 'CONTRIBUTING clone URL is filled in');
+$t->assertContains(
+    'bin/wp-env.cmd text eol=crlf',
+    $read('.gitattributes'),
+    'the Windows wrapper is checked out with CRLF'
+);
 
 // Section 9 (Command options) must list exactly the options setup.php declares.
 $setupPhp     = $read('setup.php');
@@ -267,4 +277,6 @@ $t->assertContains('php tests/run.php', $workflow, 'CI runs the test suite');
 $t->assertContains('php -l', $workflow, 'CI lints PHP files');
 $t->assertContains('composer validate --strict', $workflow, 'CI validates composer.json');
 $t->assertContains("'7.4'", $workflow, 'CI covers the minimum supported PHP version');
+$t->assertContains("'8.5'", $workflow, 'CI covers the newest supported PHP version');
+$t->assertContains('shellcheck bin/wp-env', $workflow, 'CI shell-checks the POSIX wrapper');
 $t->assertContains('setup --dry-run', $workflow, 'CI smoke-tests the dry run');

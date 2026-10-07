@@ -40,9 +40,10 @@ First stable release of the WordPress Environment Bootstrapper.
   theme ready) and a closing summary.
 - `bin/wp-env` (POSIX) and `bin\wp-env.cmd` (Windows) wrappers.
 - Dependency-free test suite (`php tests/run.php`) and GitHub Actions CI
-  (`.github/workflows/php.yml`: PHP 7.4-8.3 lint + tests, MySQL dry-run smoke test).
+  (`.github/workflows/php.yml`: PHP 7.4-8.5 lint + tests, ShellCheck on `bin/wp-env`, MySQL
+  dry-run smoke test).
 - Documentation: `README.md` (26 sections), `CONTRIBUTING.md`, `SECURITY.md`, `LICENSE` (MIT),
-  `.editorconfig`, `.gitignore`.
+  `.editorconfig`, `.gitignore`, `.gitattributes` (LF in the repository, CRLF for `*.cmd`).
 
 ### Security
 
@@ -52,4 +53,4 @@ First stable release of the WordPress Environment Bootstrapper.
 - `.gitignore` excludes `config/setup.json`, `secrets/env.json`, legacy `setup.json`/`env.json`,
   `*.zip`, `*.wpress` and logs.
 
-[1.0.0]: https://github.com/wp-environment/wp-environment/releases/tag/v1.0.0
+[1.0.0]: https://github.com/ndg-nitin/wp-environment-bootstrapper/releases/tag/v1.0.0

@@ -1,0 +1,22 @@
+# Normalise line endings: LF in the repository, platform-appropriate on checkout.
+* text=auto
+
+# Shell entry point must stay LF even when checked out on Windows.
+bin/wp-env text eol=lf
+*.sh text eol=lf
+
+# The Windows wrapper needs CRLF for cmd.exe to read it reliably.
+bin/wp-env.cmd text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never touched by git's text normalisation.
+*.zip binary
+*.wpress binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

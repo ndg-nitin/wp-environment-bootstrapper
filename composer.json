@@ -1,8 +1,19 @@
 {
-    "name": "wp-environment/wp-environment",
+    "name": "ndg-nitin/wp-environment-bootstrapper",
     "description": "Reproducible WordPress development environments from a JSON configuration file and a single WP-CLI command.",
     "type": "project",
     "license": "MIT",
+    "homepage": "https://github.com/ndg-nitin/wp-environment-bootstrapper",
+    "authors": [
+        {
+            "name": "ndg-nitin",
+            "email": "niting@axioned.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/ndg-nitin/wp-environment-bootstrapper/issues",
+        "source": "https://github.com/ndg-nitin/wp-environment-bootstrapper"
+    },
     "keywords": [
         "wordpress",
         "wp-cli",

@@ -1,5 +1,8 @@
 # WordPress Environment Bootstrapper
 
+[![CI](https://github.com/ndg-nitin/wp-environment-bootstrapper/actions/workflows/php.yml/badge.svg)](https://github.com/ndg-nitin/wp-environment-bootstrapper/actions/workflows/php.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Reproducible WordPress development environments from one JSON file and one WP-CLI command.
 
 ```bash
@@ -70,8 +73,8 @@ Composer is **not** required to run the tool: `setup.php` falls back to a minima
 ## 4. Installation
 
 ```bash
-git clone <your-fork-url> wp-env
-cd wp-env
+git clone https://github.com/ndg-nitin/wp-environment-bootstrapper.git wp-env-bootstrapper
+cd wp-env-bootstrapper
 
 # optional: regenerate the autoloader
 composer install
@@ -474,13 +477,15 @@ Every PHP file is also linted (`php -l`) in CI.
 
 `.github/workflows/php.yml` runs on pushes and pull requests:
 
-1. **Lint and tests** - matrix over PHP 7.4, 8.0, 8.1, 8.2, 8.3: `composer validate --strict`,
-   `php -l` on every file, `php tests/run.php` (WP-CLI installed so the child-process test runs).
+1. **Lint and tests** - matrix over PHP 7.4 through 8.5: `composer validate --strict`,
+   `php -l` on every file, `shellcheck bin/wp-env`, `php tests/run.php` (WP-CLI installed so the
+   child-process test runs).
 2. **Dry-run smoke test** - boots a MySQL 8 service, writes `config/setup.json` from the example with
    service credentials, and runs `wp --require=setup.php setup --dry-run`. No WordPress installation is
    created; it proves the whole load → validate → check → plan path works end to end.
 
-To run the same checks locally: `php -l` on changed files, `php tests/run.php`, then `bin/wp-env --dry-run`.
+To run the same checks locally: `php -l` on changed files, `shellcheck bin/wp-env` (if installed),
+`php tests/run.php`, then `bin/wp-env --dry-run`.
 
 ## 23. Extending the tool
 

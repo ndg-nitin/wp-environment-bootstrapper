@@ -19,10 +19,11 @@ Thanks for helping improve the WordPress Environment Bootstrapper.
 ## Getting started
 
 ```bash
-git clone <your-fork-url> wp-env
-cd wp-env
+git clone https://github.com/ndg-nitin/wp-environment-bootstrapper.git wp-env-bootstrapper
+cd wp-env-bootstrapper
 composer install          # optional: regenerates vendor/autoload.php
 php tests/run.php         # must be green before you start
+shellcheck bin/wp-env     # optional: if shellcheck is installed (CI always runs it)
 ```
 
 ## Making a change
@@ -59,7 +60,7 @@ except for the WP-CLI round-trip test, which skips itself when `wp` is not on `P
   (`php tests/run.php`, `bin/wp-env --dry-run`, a real run against a disposable path).
 - Keep the diff focused; unrelated reformatting makes review harder.
 - Update `README.md` and `CHANGELOG.md` when behaviour changes.
-- Ensure CI is green (PHP 7.4 - 8.3 lint, tests, dry-run smoke test).
+- Ensure CI is green (PHP 7.4 - 8.5 lint + tests, ShellCheck, MySQL dry-run smoke test).
 
 ## Reporting bugs
 
