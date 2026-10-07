@@ -52,6 +52,9 @@ First stable release of the WordPress Environment Bootstrapper.
   (`/var/www/html/wp-environment-bootstrapper` + `project` -> `/var/www/html/project`). Absolute
   paths are used exactly as configured, and a path that resolves inside the repository is rejected
   during validation. `config/setup.example.json` now ships `"path": "project"` accordingly.
+- The `No configuration file found` error now spells out the first-run steps: the copy command, the
+  keys to edit, where a relative `wordpress.path` is created (next to the repository, with the real
+  resolved path), and the `bin/wp-env` short form.
 
 ### Security
 

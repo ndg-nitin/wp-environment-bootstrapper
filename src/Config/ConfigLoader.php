@@ -116,7 +116,11 @@ final class ConfigLoader
             'No configuration file found (looked for config/setup.json and ./setup.json).',
             [
                 'Create one from the template: cp config/setup.example.json config/setup.json',
+                'Then edit it: database credentials, site URL, admin password and wordpress.path - a relative '
+                . 'wordpress.path is created NEXT to this repository, never inside it (e.g. "project" -> '
+                . Filesystem::parentOf($this->projectRoot) . DIRECTORY_SEPARATOR . 'project).',
                 'Or pass an explicit path: wp --require=setup.php setup --config=path/to/setup.json',
+                'Short form of the same command: bin/wp-env (bin\\wp-env.cmd on Windows).',
             ]
         );
     }

@@ -533,7 +533,7 @@ facing errors must carry hints, and secrets must go through `CommandRunner::addS
 
 | Symptom | Likely cause and fix |
 |---|---|
-| `No configuration file found` | Run `cp config/setup.example.json config/setup.json`, or pass `--config=`. |
+| `No configuration file found` | Run `cp config/setup.example.json config/setup.json`, or pass `--config=`; then edit it - the hints spell out the DB credentials and remind you that a relative `wordpress.path` is created *next to* the repository (section 6). `bin/wp-env` is the short form of the same command. |
 | `wordpress.path ... resolves to ... inside the bootstrapper repository` | The repository holds the tool, not the site: use a sibling name such as `project` (or an absolute path outside the repository). Section 6 shows the resolution table. |
 | `Configuration is invalid (N error(s))` | Every line under the message names a key and the expected form; fix them all at once. |
 | `acf-pro requires your ACF Pro license key` | Put your key in `secrets/env.json` → `acf_pro_key` (section 13). |

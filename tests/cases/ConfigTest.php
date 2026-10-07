@@ -106,6 +106,33 @@ $t->assertThrows(
     'config/setup.json'
 );
 
+$noConfigHints = '';
+try {
+    (new ConfigLoader($emptyRoot))->load();
+} catch (SetupException $e) {
+    $noConfigHints = implode("\n", $e->getHints());
+}
+$t->assertContains(
+    'cp config/setup.example.json config/setup.json',
+    $noConfigHints,
+    'the hint gives the exact copy command'
+);
+$t->assertContains(
+    Filesystem::parentOf($emptyRoot) . DIRECTORY_SEPARATOR . 'project',
+    $noConfigHints,
+    'the hint shows where a relative wordpress.path is created (next to the repository)'
+);
+$t->assertContains(
+    'bin/wp-env',
+    $noConfigHints,
+    'the hint mentions the short form bin/wp-env'
+);
+$t->assertNotContains(
+    'wp-environment-bootstrapper' . DIRECTORY_SEPARATOR . 'project',
+    $noConfigHints,
+    'the hint never suggests installing inside the repository'
+);
+
 $brokenRoot = $makeProject();
 mkdir($brokenRoot . '/config', 0755, true);
 file_put_contents($brokenRoot . '/config/setup.json', '{ "wordpress": { "version": "6.8.2", }');
