@@ -1,0 +1,52 @@
+{
+  "wordpress": {
+    "version": "6.8.2",
+    "path": "./wordpress"
+  },
+
+  "database": {
+    "name": "my_wordpress",
+    "user": "root",
+    "password": "",
+    "host": "localhost",
+    "prefix": "wp_"
+  },
+
+  "site": {
+    "url": "http://localhost/wordpress",
+    "title": "My WordPress Site"
+  },
+
+  "admin": {
+    "username": "admin",
+    "password": "change-this-password",
+    "email": "admin@example.com"
+  },
+
+  "plugins": {
+    "install": [
+      {
+        "name": "elementor",
+        "activate": true
+      },
+      {
+        "name": "classic-editor",
+        "version": "1.6.7",
+        "activate": true
+      }
+    ],
+
+    "remove": [
+      "hello",
+      "akismet"
+    ],
+
+    "strict": true
+  },
+
+  "theme": {
+    "source": "",
+    "activate": true,
+    "remove_default_themes": true
+  }
+}

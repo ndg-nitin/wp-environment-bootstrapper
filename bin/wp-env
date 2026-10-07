@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# wp-env - run the environment bootstrapper without typing --require.
+#
+# Usage:
+#   bin/wp-env                     # same as: wp --require=setup.php setup
+#   bin/wp-env --dry-run           # print the plan, change nothing
+#   bin/wp-env --config=other.json
+#   bin/wp-env --skip-plugins --skip-theme
+#
+# The WP-CLI binary can be overridden with the WP_CLI environment variable:
+#   WP_CLI=/path/to/wp bin/wp-env --dry-run
+
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WP_CLI_BIN="${WP_CLI:-wp}"
+
+# WP-CLI accepts forward slashes on every platform, including Windows.
+ROOT="${ROOT//\\//}"
+
+if ! command -v "$WP_CLI_BIN" >/dev/null 2>&1; then
+    echo "wp-env: WP-CLI binary not found: $WP_CLI_BIN" >&2
+    echo "  -> Install WP-CLI: https://wp-cli.org/#installing" >&2
+    echo "  -> Or point to it explicitly: WP_CLI=/path/to/wp bin/wp-env $*" >&2
+    exit 1
+fi
+
+exec "$WP_CLI_BIN" --require="$ROOT/setup.php" setup "$@"

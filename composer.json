@@ -1,0 +1,31 @@
+{
+    "name": "wp-environment/wp-environment",
+    "description": "Reproducible WordPress development environments from a JSON configuration file and a single WP-CLI command.",
+    "type": "project",
+    "license": "MIT",
+    "keywords": [
+        "wordpress",
+        "wp-cli",
+        "bootstrap",
+        "development",
+        "environment",
+        "scaffolding"
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "WpEnvironment\\": "src/"
+        }
+    },
+    "scripts": {
+        "test": "@php tests/run.php"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

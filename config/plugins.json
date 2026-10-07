@@ -1,0 +1,61 @@
+{
+  "_comment": "REFERENCE CATALOG ONLY. This file is never read by `wp setup`. It documents commonly used WordPress plugins so you can pick slugs for plugins.install / plugins.remove in config/setup.json. Installing plugins requires listing them in config/setup.json.",
+  "plugins": [
+    {
+      "name": "classic-editor",
+      "description": "Restores the previous WordPress block editor (TinyMCE)"
+    },
+    {
+      "name": "advanced-custom-fields",
+      "description": "Custom fields and content modeling (free version)"
+    },
+    {
+      "name": "acf-pro",
+      "description": "Advanced Custom Fields PRO - requires your own license key in secrets/env.json"
+    },
+    {
+      "name": "elementor",
+      "description": "Visual page builder"
+    },
+    {
+      "name": "redirection",
+      "description": "URL redirection and 404 management"
+    },
+    {
+      "name": "wordfence",
+      "description": "Security scanning and firewall"
+    },
+    {
+      "name": "wp-super-cache",
+      "description": "Page caching for performance"
+    },
+    {
+      "name": "simple-history",
+      "description": "Audit log of changes made in WordPress"
+    },
+    {
+      "name": "wps-hide-login",
+      "description": "Change or hide the default /wp-login.php URL"
+    },
+    {
+      "name": "disable-comments",
+      "description": "Disable comments site-wide or per post type"
+    },
+    {
+      "name": "wp-smushit",
+      "description": "Image compression and optimization"
+    },
+    {
+      "name": "all-in-one-wp-migration",
+      "description": "Site export/import for migrations"
+    },
+    {
+      "name": "duplicate-post",
+      "description": "Clone posts and pages for editing"
+    },
+    {
+      "name": "query-monitor",
+      "description": "Developer debugging panel for hooks, queries and scripts"
+    }
+  ]
+}

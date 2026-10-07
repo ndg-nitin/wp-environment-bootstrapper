@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.0', '8.1', '8.2', '8.3']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, mysqli, zip
+          coverage: none
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Lint every PHP file
+        run: |
+          set -e
+          find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 -P4 php -l
+
+      - name: Generate autoloader
+        run: composer dump-autoload --optimize --no-interaction
+
+      - name: Install WP-CLI
+        run: |
+          curl -fsSL -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          sudo install -m 0755 wp-cli.phar /usr/local/bin/wp
+          wp --version
+
+      - name: Run tests
+        run: php tests/run.php
+
+  dry-run:
+    name: Dry run against MySQL
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wp_env_test
+          MYSQL_USER: wp
+          MYSQL_PASSWORD: wp
+        ports:
+          - '3306:3306'
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: json, mysqli, zip
+          coverage: none
+
+      - name: Install WP-CLI
+        run: |
+          curl -fsSL -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          sudo install -m 0755 wp-cli.phar /usr/local/bin/wp
+          wp --version
+
+      - name: Write the local configuration (gitignored)
+        run: |
+          jq '.database = {
+                "name": "wp_env_test",
+                "user": "wp",
+                "password": "wp",
+                "host": "127.0.0.1:3306",
+                "prefix": "wp_"
+              }
+              | .wordpress.path = "./wordpress-smoke"
+              | .site.url = "http://localhost/wordpress-smoke"' \
+            config/setup.example.json > config/setup.json
+          cat config/setup.json
+
+      - name: Dry run (validate + plan, no changes)
+        run: wp --require=setup.php setup --dry-run
+
+      - name: The dry run must not have created anything
+        run: |
+          if [ -e ./wordpress-smoke ] || [ -e ./wp-config.php ]; then
+            echo "Dry run created files - this is a bug." >&2
+            exit 1
+          fi
+          echo "No files were created."

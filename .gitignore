@@ -1,0 +1,27 @@
+# Dependencies
+/vendor/
+
+# Local configuration and secrets - never commit these
+/config/setup.json
+/secrets/env.json
+
+# Legacy configuration files from the original project (contain credentials)
+/setup.json
+/env.json
+
+# Local WordPress installation created by this tool (default example path)
+/wordpress/
+/wp-config.php
+
+# Archives and backups must never be committed
+*.zip
+*.wpress
+
+# Logs
+*.log
+
+# Operating system / editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
