@@ -54,11 +54,6 @@ final class CommandResult
         return $this->stdout;
     }
 
-    public function getStderr(): string
-    {
-        return $this->stderr;
-    }
-
     /**
      * Combined trimmed output, stdout first, for error reports.
      */

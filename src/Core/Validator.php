@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace WpEnvironment\Core;
 
 use WpEnvironment\Support\CommandRunner;
+use WpEnvironment\Support\Filesystem;
 use WpEnvironment\WordPress\Database;
 
 /**
@@ -12,6 +13,7 @@ use WpEnvironment\WordPress\Database;
  *
  *   - PHP version
  *   - WP-CLI availability (`wp --info`)
+ *   - writability of the installation path
  *   - MySQL/MariaDB connectivity with the configured credentials
  *
  * Every check yields a structured result:
@@ -33,11 +35,12 @@ final class Validator
     /**
      * @return array<int, array{label:string, status:string, detail:string, hints:string[]}>
      */
-    public function check(Database $database): array
+    public function check(Database $database, string $installPath): array
     {
         return [
             $this->checkPhp(),
             $this->checkWpCli(),
+            $this->checkInstallPath($installPath),
             $this->checkDatabase($database),
         ];
     }
@@ -90,6 +93,29 @@ final class Validator
             'status' => 'ok',
             'detail' => $version,
             'hints'  => [],
+        ];
+    }
+
+    /**
+     * Whether the target directory (or its nearest existing parent) can be
+     * written by the current user - the most common cause of a failed
+     * `wp core download` is a path nobody may write to.
+     *
+     * @return array{label:string, status:string, detail:string, hints:string[]}
+     */
+    private function checkInstallPath(string $path): array
+    {
+        $writable = Filesystem::isWritableAt($path);
+        $exists   = file_exists($path);
+
+        return [
+            'label'  => 'Install path',
+            'status' => $writable ? 'ok' : 'fail',
+            'detail' => sprintf('%s (%s)', $path, $writable ? ($exists ? 'writable' : 'parent writable') : 'not writable'),
+            'hints'  => $writable ? [] : [
+                'WordPress cannot be written to: ' . $path,
+                'Fix the ownership/permissions of that directory for the user running WP-CLI, or point wordpress.path somewhere writable.',
+            ],
         ];
     }
 

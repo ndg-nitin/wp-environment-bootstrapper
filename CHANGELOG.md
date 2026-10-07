@@ -19,8 +19,8 @@ First stable release of the WordPress Environment Bootstrapper.
   legacy `./env.json` and the legacy `acf_key` name are still supported.
 - Full schema validation that reports **every** problem at once, plus warnings for unknown keys,
   weak passwords and legacy fields.
-- Environment checks: PHP version, `wp --info`, read-only database credential pre-flight with
-  classified connection errors.
+- Environment checks: PHP version, `wp --info`, install-path writability, read-only database
+  credential pre-flight with classified connection errors.
 - WordPress core download (pinned version), `wp-config.php` creation, database creation,
   `wp core install` and `wp core verify-checksums`.
 - Plugins: WordPress.org install with optional pinned version, URL and local ZIP sources,

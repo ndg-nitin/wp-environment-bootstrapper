@@ -178,7 +178,7 @@ final class Environment
      */
     private function runChecks(): array
     {
-        $checks = $this->validator->check($this->database);
+        $checks = $this->validator->check($this->database, (string) $this->config['wordpress']['path']);
 
         $this->progress->section('Environment checks');
 

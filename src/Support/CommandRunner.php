@@ -46,11 +46,6 @@ final class CommandRunner
         $this->dryRun  = $dryRun;
     }
 
-    public function isDryRun(): bool
-    {
-        return $this->dryRun;
-    }
-
     /**
      * Register a value that must never appear in output or error reports.
      */
@@ -197,7 +192,20 @@ final class CommandRunner
     }
 
     /**
-     * Resolve the WP-CLI script that started this process (or `wp` on PATH).
+     * Resolve the WP-CLI script this process should call.
+     *
+     * Preference order:
+     *
+     *   1. The script we were started with, when its name says it is WP-CLI
+     *      (`wp`, `wp.phar`, `wp-cli.phar`, `wp.bat`, ...) - so the exact
+     *      binary the user invoked is reused.
+     *   2. `wp` found on PATH - covers wrappers (`php my-wrapper.php`),
+     *      `php -r` snippets and test runners whose own argv[0] is not WP-CLI.
+     *   3. The script we were started with, when its contents identify it as
+     *      WP-CLI (a renamed phar or wrapper).
+     *
+     * Returning null makes the caller report "install WP-CLI" instead of
+     * silently executing an unrelated PHP file.
      */
     private function resolveWpScript(): ?string
     {
@@ -205,36 +213,35 @@ final class CommandRunner
             return $this->wpScript;
         }
 
-        $argv0 = $_SERVER['argv'][0] ?? 'wp';
+        $argv0 = (string) ($_SERVER['argv'][0] ?? '');
 
-        if (strpos($argv0, '/') !== false || strpos($argv0, '\\') !== false || preg_match('#^[A-Za-z]:[/\\\\]#', $argv0)) {
+        if ($argv0 !== '' && preg_match('/^wp(?:-cli)?(?:\.(?:phar|bat|cmd))?$/i', basename(str_replace('\\', '/', $argv0))) === 1) {
             $real = realpath($argv0);
 
             if ($real !== false && is_file($real)) {
                 return $this->wpScript = $real;
             }
-        } else {
-            // Bare command name (e.g. "wp"): prefer a file in the current
-            // directory, then search PATH.
-            $local = getcwd();
+        }
 
-            if ($local !== false && is_file($local . DIRECTORY_SEPARATOR . $argv0)) {
-                $real = realpath($local . DIRECTORY_SEPARATOR . $argv0);
+        $found = $this->findInPath('wp');
 
-                if ($real !== false) {
+        if ($found !== null) {
+            return $this->wpScript = $found;
+        }
+
+        if ($argv0 !== '') {
+            $real = realpath($argv0);
+
+            if ($real !== false && is_file($real)) {
+                $head = (string) @file_get_contents($real, false, null, 0, 65536);
+
+                if (strpos($head, 'WP-CLI') !== false) {
                     return $this->wpScript = $real;
                 }
             }
-
-            $found = $this->findInPath($argv0);
-
-            if ($found !== null) {
-                return $this->wpScript = $found;
-            }
         }
 
-        // Last resort: let PHP resolve it the same way the shell did.
-        return $this->wpScript = $argv0;
+        return $this->wpScript = null;
     }
 
     /**

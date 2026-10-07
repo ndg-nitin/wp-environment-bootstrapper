@@ -41,35 +41,6 @@ final class Filesystem
     }
 
     /**
-     * Join path segments with the platform separator, collapsing duplicates.
-     */
-    public static function join(string ...$parts): string
-    {
-        $segments = [];
-
-        foreach ($parts as $part) {
-            if ($part === '') {
-                continue;
-            }
-
-            $segments[] = trim($part, '/\\');
-        }
-
-        if ($segments === []) {
-            return '';
-        }
-
-        $joined = implode(DIRECTORY_SEPARATOR, $segments);
-
-        // Preserve a leading separator (root or UNC prefix) when present.
-        if (isset($parts[0]) && ($parts[0][0] === '/' || $parts[0][0] === '\\')) {
-            return DIRECTORY_SEPARATOR . ltrim($joined, '/\\');
-        }
-
-        return $joined;
-    }
-
-    /**
      * Resolve a possibly relative path against a base directory.
      *
      * Handles ".", "..", mixed separators and already-absolute paths without
@@ -135,16 +106,6 @@ final class Filesystem
         }
 
         return $normalized === '' ? '.' : $normalized;
-    }
-
-    public static function isFile(string $path): bool
-    {
-        return is_file($path);
-    }
-
-    public static function isDirectory(string $path): bool
-    {
-        return is_dir($path);
     }
 
     /**

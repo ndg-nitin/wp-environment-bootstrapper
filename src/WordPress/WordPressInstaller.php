@@ -36,11 +36,6 @@ final class WordPressInstaller
         $this->path    = $config['wordpress']['path'];
     }
 
-    public function getPath(): string
-    {
-        return $this->path;
-    }
-
     /**
      * Whether WordPress core files are present at the target path.
      */

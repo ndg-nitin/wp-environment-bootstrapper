@@ -99,7 +99,7 @@ bin/wp-env
 #    Admin: http://localhost/wordpress/wp-admin
 ```
 
-`bin/wp-env` is a three-line wrapper around `wp --require=setup.php setup`; on Windows use
+`bin/wp-env` is a thin wrapper around `wp --require=setup.php setup`; on Windows use
 `bin\wp-env.cmd`, or call WP-CLI directly. Both accept the same options.
 
 Prefer the explicit form? This is exactly equivalent:
@@ -194,7 +194,8 @@ Steps performed by a full run (each one is a real WP-CLI command with an explici
 
 1. Load configuration and secrets; print warnings (legacy schema, unknown keys, weak values).
 2. Validate the schema - **all** problems are reported at once, not just the first.
-3. Environment checks: PHP version, `wp --info`, database credential pre-flight (read-only).
+3. Environment checks: PHP version, `wp --info`, install-path writability, database credential
+   pre-flight (all read-only).
 4. `wp core download` (pinned version; existing files are never overwritten).
 5. `wp config create` (skipped when `wp-config.php` already exists).
 6. `wp db create` (idempotent - an existing database is fine).
@@ -224,6 +225,11 @@ wp --require=setup.php setup --skip-plugins --skip-theme
 
 Options combine freely. Unknown options are rejected by WP-CLI's synopsis parsing before anything runs.
 
+Note on `--skip-plugins`: WP-CLI reserves it as a *global* parameter and strips it from the arguments
+handed to the command. The command therefore reads it back from the WP-CLI runner configuration, where
+it keeps its documented meaning here - skip plugin installation, activation and removal. (`--skip-theme`
+is ours and is parsed from the command arguments as usual.)
+
 ## 10. Dry runs and planning
 
 ```bash
@@ -232,7 +238,7 @@ bin/wp-env --dry-run
 
 A dry run performs only read-only work and prints:
 
-- the environment checks (PHP, WP-CLI, database credentials),
+- the environment checks (PHP, WP-CLI, install path writability, database credentials),
 - the resolved configuration (version, database, site, path),
 - the plugins to install, the plugins to remove, and the theme step,
 - `DRY RUN - No changes were made.`
@@ -242,8 +248,8 @@ Safety is layered:
 1. In dry-run mode the command never calls the execution path - it prints the plan instead.
 2. The `CommandRunner` itself is constructed in dry-run mode, so any command that is *not* explicitly
    marked read-only is skipped and logged as `Would run: ...`.
-3. Only three read-only probes are allowed through: `wp --info`, the database pre-flight (a plain
-   `mysqli` connection), and nothing else.
+3. Exactly two read-only probes are allowed through: `wp --info` and the database pre-flight (a plain
+   `mysqli` connection - no WP-CLI command, no SQL that changes anything).
 
 If an environment check fails during a dry run, the plan is still printed and the command then exits
 non-zero with the failed checks as hints.
@@ -352,7 +358,7 @@ Migration is a copy-paste: start from `config/setup.example.json` and compare.
 │   ├── Core/Environment.php           # Workflow orchestration, dry run, verification, summary
 │   ├── Core/Logger.php                # Leveled console output (ERROR -> STDERR)
 │   ├── Core/SetupException.php        # Message + actionable hints
-│   ├── Core/Validator.php             # PHP / WP-CLI / database checks
+│   ├── Core/Validator.php             # PHP / WP-CLI / install path / database checks
 │   ├── Support/CommandRunner.php      # Child-process execution, dry-run guard, redaction
 │   ├── Support/CommandResult.php      # Exit code + captured output
 │   ├── Support/Downloader.php         # curl/streams downloads to temp files
@@ -410,8 +416,9 @@ Report vulnerabilities per `SECURITY.md`.
 
 ## 19. Cross-platform notes
 
-- All paths are built with PHP filesystem APIs (`Filesystem::join/resolve/normalize`) - no hardcoded
-  `/`, no assumptions about the working directory; Windows drive letters and UNC paths are recognised.
+- All paths are built with PHP filesystem APIs (`Filesystem::resolve/normalize`) and probed with
+  `Filesystem::isWritableAt` - no hardcoded `/`, no assumptions about the working directory; Windows
+  drive letters and UNC paths are recognised.
 - Commands are passed as argument arrays, so spaces in paths (e.g. `WP ENV - Bootstraper`) are safe.
 - `bin/wp-env` is a POSIX script; `bin/wp-env.cmd` covers Windows, and `wp --require=setup.php setup`
   works everywhere unchanged.
@@ -443,7 +450,7 @@ php tests/run.php Config      # only test files matching "Config"
 composer test                 # same as php tests/run.php
 ```
 
-The suite is dependency-free (a ~100-line runner, no PHPUnit) and covers:
+The suite is dependency-free (a small hand-written runner, no PHPUnit) and covers:
 
 - example configuration loads and passes validation,
 - legacy `setup.json`/`env.json` mapping (including `acf_key` → `acf_pro_key`),
@@ -451,8 +458,15 @@ The suite is dependency-free (a ~100-line runner, no PHPUnit) and covers:
 - validation collects **every** error, and ACF Pro without a key is rejected with instructions,
 - secret redaction (secrets never appear in output or history),
 - dry-run really executes nothing, while read-only probes still run,
+- environment checks: the four labelled checks are always reported, every failing check carries
+  hints, an unwritable install path is fatal, and the database password never leaks into a result,
+- option handling of the command itself, including the `--skip-plugins` read-back from the WP-CLI
+  runner configuration,
 - a live `wp --info` child process round-trip (skipped automatically when WP-CLI is absent),
-- path normalization/resolution and ZIP root-slug detection.
+- path normalization/resolution and ZIP root-slug detection,
+- repository invariants: every deliverable exists, README documents exactly the implemented options,
+  no key-like or credential-like values, no shell-exec shortcuts or placeholder markers,
+  `config/plugins.json` stays data-only, and the CI workflow really runs the suite.
 
 Every PHP file is also linted (`php -l`) in CI.
 

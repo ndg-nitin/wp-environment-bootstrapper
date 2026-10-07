@@ -32,11 +32,8 @@ final class Downloader
         $display = $displayUrl ?? $url;
         $dir     = dirname($destination);
 
-        if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
-            throw new SetupException(
-                sprintf('Unable to create temporary directory "%s" for the download.', $dir),
-                ['Check that the system temporary directory is writable.']
-            );
+        if (!is_dir($dir)) {
+            Filesystem::ensureDirectory($dir);
         }
 
         $error = null;
